@@ -2,21 +2,22 @@ using System;
 using LitMotion;
 using LitMotion.Extensions;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Runtime
 {
     public class MaterialFade1 : MonoBehaviour
     {
         public GameObjectRendererColorChange[] gameObjectRendererColorChanges;
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        public string colorShaderId = "_BaseColor";
+        private static int _baseColorId;
 
 
         private void Awake()
         {
+            _baseColorId = Shader.PropertyToID(colorShaderId);
             foreach (var gameObjectRendererColorChange in gameObjectRendererColorChanges)
             {
-                gameObjectRendererColorChange.Setup(BaseColorId);
+                gameObjectRendererColorChange.Setup(_baseColorId);
             }
         }
 
@@ -28,7 +29,7 @@ namespace Runtime
             }
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
             foreach (var gameObjectRendererColorChange in gameObjectRendererColorChanges)
             {
@@ -41,7 +42,6 @@ namespace Runtime
     public class GameObjectRendererColorChange
     {
         public GameObject gameObject;
-        public bool disableOnEnd;
         public Renderer renderer;
         public Color targetColor;
         public float duration = 1;
@@ -63,14 +63,9 @@ namespace Runtime
         public void Play()
         {
             _motionHandle = LMotion.Create(_initialBaseColor, targetColor, duration)
-                .WithOnComplete(Callback)
                 .BindToMaterialColor(renderer.material, _nameID);
         }
-
-        private void Callback()
-        {
-            if (disableOnEnd) gameObject.SetActive(false);
-        }
+        
 
         public void Stop()
         {
